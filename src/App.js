@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import Web3 from "web3";
-import { TODO_LIST_ABI, TODO_LIST_ADDRESS } from "./constant/TodoList";
+import { initTodolistContract } from "./helper/contract";
 import "./App.css";
 
 const App = () => {
@@ -10,21 +9,18 @@ const App = () => {
   const [taskCount, setTaskCount] = useState(0);
   const [todoListContract, setTodoListContract] = useState();
   const [loading, setLoading] = useState(false);
-  console.log("tasks ", tasks);
 
+  console.log(" tasks ", tasks);
   useEffect(() => {
     loadBlockchainData();
   }, []);
 
-  window.ethereum.on("accountsChanged", function (accounts) {
-    // Time to reload your interface with accounts[0]!
+  window.ethereum.on("accountsChanged", (accounts) => {
     console.log("account changed ", accounts);
     loadBlockchainData();
   });
 
-  window.ethereum.on("networkChanged", function (networkId) {
-    // Time to reload your interface with the new networkId
-    console.log("network  changed ", networkId);
+  window.ethereum.on("chainChanged", (networkId) => {
     loadBlockchainData();
   });
 
@@ -39,7 +35,6 @@ const App = () => {
         const newTask = receipt.events.TaskCreated.returnValues;
         setTasks([...tasks, newTask]);
         setTaskCount(Number(taskCount) + 1);
-        // loadBlockchainData();
       });
   };
 
@@ -50,24 +45,19 @@ const App = () => {
       .send({ from: account })
       .once("receipt", (receipt) => {
         console.log(" receipt ", receipt);
+        const foundIndex = tasks.findIndex((task) => task.id === id);
+        tasks[foundIndex].completed = receipt.events.TaskCompleted.completed;
+        setTasks(tasks);
         setLoading(false);
       });
   };
 
   const loadBlockchainData = async () => {
-    const web3 = new Web3(Web3.givenProvider || "http://localhost:8545");
-    const network = await web3.eth.net.getNetworkType();
-
-    const accounts = await web3.eth.getAccounts();
-
-    const todoList = new web3.eth.Contract(TODO_LIST_ABI, TODO_LIST_ADDRESS);
-
+    const { network, accounts, todoList } = await initTodolistContract();
     const taskCount = await todoList.methods.taskCount().call();
-
     const allTask = [];
     for (let i = 1; i <= taskCount; i++) {
       const thisTask = await todoList.methods.tasks(i).call();
-      // console.log("thisTask ", thisTask);
       allTask.push(thisTask);
     }
     console.log("loadBlockchainData  ");
@@ -79,8 +69,7 @@ const App = () => {
   };
   return (
     <div className="App">
-      <header className="App-header">
-        <p>Hello world</p>
+      <div className="App-header">
         <p>Your network: {network}</p>
         <p>Your account: {account}</p>
         <p>Task Count: {taskCount}</p>
@@ -101,10 +90,11 @@ const App = () => {
               <label>
                 <input
                   type="checkbox"
-                  onChange={() => {
+                  name={task.id}
+                  onClick={() => {
                     toggleTaskComplete(task.id);
                   }}
-                  checked={task.completed}
+                  defaultChecked={task.completed}
                 />
                 <span>{task.id} .) </span>
                 <span>{task.content}</span>
@@ -112,7 +102,7 @@ const App = () => {
             </div>
           );
         })}
-      </header>
+      </div>
     </div>
   );
 };
