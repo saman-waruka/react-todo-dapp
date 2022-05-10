@@ -10,7 +10,8 @@
     "react-dom": "^18.1.0",
     "react-scripts": "^4.0.3",
     "web-vitals": "^2.1.4",
-    "web3": "^1.7.3"
+    "web3": "^1.7.3",
+    "react-error-overlay": "6.0.9"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -35,5 +36,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "resolutions": {
+    "react-error-overlay": "6.0.9"
   }
 }
