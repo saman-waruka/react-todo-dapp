@@ -70,6 +70,12 @@ const App = () => {
     const { network, account, todoList } = await initTodolistContract();
     const taskCount = await todoList.methods.getTaskCount().call();
     const allTask = await todoList.methods.getTasks().call();
+    console.log("taskCount ", taskCount);
+    console.log("allTask ", allTask);
+    console.log("todoList ", todoList);
+    const task0 = await todoList.methods.tasks(account, 0).call();
+    console.log("task0 ", task0);
+
     setNetwork(network);
     setAccount(account);
     setTodoListContract(todoList);
