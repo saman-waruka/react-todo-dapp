@@ -9,7 +9,8 @@
     "chain": "npx hardhat node",
     "test": "npx hardhat test",
     "deploy": "npx hardhat run --network localhost scripts/deploy.ts",
-    "deploy:rinkeby": "npx hardhat run --network rinkeby scripts/deploy.ts"
+    "deploy:rinkeby": "npx hardhat run --network rinkeby scripts/deploy.ts",
+    "deploy:ganache": "npx hardhat run --network ganache scripts/deploy.ts"
   },
   "author": "",
   "license": "ISC",

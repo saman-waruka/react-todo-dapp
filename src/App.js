@@ -21,6 +21,7 @@ const App = () => {
   });
 
   window.ethereum.on("chainChanged", (networkId) => {
+    console.log(" networkId ", networkId);
     loadBlockchainData();
   });
 
@@ -35,6 +36,10 @@ const App = () => {
         const newTask = receipt.events.TaskCreated.returnValues;
         setTasks([...tasks, newTask]);
         setTaskCount(Number(taskCount) + 1);
+      })
+      .once("error", (error) => {
+        console.log("Error ocure", error);
+        setLoading(false);
       });
   };
 
@@ -49,20 +54,24 @@ const App = () => {
         tasks[foundIndex].completed = receipt.events.TaskCompleted.completed;
         setTasks(tasks);
         setLoading(false);
+      })
+      .once("error", (error) => {
+        console.log("Error ocure", error);
+        setLoading(false);
+
+        alert(
+          `error code: ${error.code} \nMessage: ${error.message} \n\nStack: ${error.stack}`
+        );
       });
   };
 
   const loadBlockchainData = async () => {
-    const { network, accounts, todoList } = await initTodolistContract();
-    const taskCount = await todoList.methods.taskCount().call();
-    const allTask = [];
-    for (let i = 1; i <= taskCount; i++) {
-      const thisTask = await todoList.methods.tasks(i).call();
-      allTask.push(thisTask);
-    }
     console.log("loadBlockchainData  ");
+    const { network, account, todoList } = await initTodolistContract();
+    const taskCount = await todoList.methods.getTaskCount().call();
+    const allTask = await todoList.methods.getTasks().call();
     setNetwork(network);
-    setAccount(accounts[0]);
+    setAccount(account);
     setTodoListContract(todoList);
     setTaskCount(taskCount);
     setTasks(allTask);
@@ -96,7 +105,7 @@ const App = () => {
                   }}
                   defaultChecked={task.completed}
                 />
-                <span>{task.id} .) </span>
+                <span>{key + 1} .) </span>
                 <span>{task.content}</span>
               </label>
             </div>
