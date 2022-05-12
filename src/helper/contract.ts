@@ -3,8 +3,9 @@ import { NETWORK } from "../constants/Network";
 import ganacheAddress from "../constants/address/ganache.json";
 import rinkebyAddress from "../constants/address/rinkeby.json";
 import todoListAbi from "../constants/abi/TodoList.json";
+import { AbiItem } from "web3-utils";
 
-export const getContractAddress = (network) => {
+export const getContractAddress = (network: string) => {
   let contractAddress;
   switch (network) {
     case NETWORK.PRIVATE: {
@@ -30,6 +31,10 @@ export const initTodolistContract = async () => {
   const network = await web3.eth.net.getNetworkType();
   const accounts = await web3.eth.getAccounts();
   const contractAddress = getContractAddress(network);
-  const todoList = new web3.eth.Contract(todoListAbi, contractAddress);
+  const todoList = new web3.eth.Contract(
+    todoListAbi as AbiItem[],
+    contractAddress
+  );
+
   return { todoList, network, account: accounts[0], contractAddress };
 };
