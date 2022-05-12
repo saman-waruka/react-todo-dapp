@@ -70,22 +70,10 @@ const App = () => {
     console.log("loadBlockchainData  ");
     const { network, account, todoList, contractAddress } =
       await initTodolistContract();
-    const taskCount = await todoList.methods.getTaskCount().call();
-    const allTask = await todoList.methods.getTasks().call();
-    console.log("taskCount ", { taskCount });
-    console.log("allTask ", allTask);
-    console.log("todoList ", todoList);
-    try {
-      const taskCount2 = await todoList.methods.totalTask(account).call();
-      console.log("taskCount2 ", taskCount2);
-
-      for (let i = 0; i < taskCount2; i++) {
-        const task = await todoList.methods.tasks(account, i).call();
-        console.log(`task ${i} : `, task);
-      }
-    } catch (err) {
-      console.log("err", err);
-    }
+    const taskCount = await todoList.methods
+      .getTaskCount()
+      .call({ from: account });
+    const allTask = await todoList.methods.getTasks().call({ from: account });
 
     setContractAddress(contractAddress);
     setNetwork(network);
