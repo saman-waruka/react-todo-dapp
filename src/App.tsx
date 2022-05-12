@@ -1,23 +1,35 @@
-import React, { useEffect, useState } from "react";
+import { useState } from "react";
 import { initTodolistContract } from "./helper/contract";
 import "./App.css";
 import TodoItem from "./components/TodoItem";
+import { Contract } from 'web3-eth-contract' ;
+import { TransactionReceipt } from 'web3-core' ;
+
+declare global {
+  interface Window {
+      ethereum: any;
+  }
+}
+
+
+export class Task {
+  id: string;
+  content: string;
+  completed: boolean;
+}
 
 const App = () => {
   const [account, setAccount] = useState("");
   const [network, setNetwork] = useState("");
   const [contractAddress, setContractAddress] = useState("");
-  const [tasks, setTasks] = useState([]);
+  const [tasks, setTasks] = useState([] as Task[]);
   const [taskCount, setTaskCount] = useState(0);
-  const [todoListContract, setTodoListContract] = useState();
+  const [todoListContract, setTodoListContract] = useState(undefined as unknown as Contract);
   const [loading, setLoading] = useState(false);
   const [isConnectedWallet, setIsConnectedWallet] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
 
   console.log(" tasks ", tasks);
-  // useEffect(() => {
-  //   loadBlockchainData();
-  // }, []);
 
   const resetState = () => {
     setAccount("");
@@ -25,88 +37,87 @@ const App = () => {
     setContractAddress("");
     setTasks([]);
     setTaskCount(0);
-    setTodoListContract();
+    setTodoListContract(undefined as unknown as Contract);
     setLoading(false);
     setIsConnectedWallet(false);
     setIsConnecting(false);
   };
 
-  window.ethereum.on("accountsChanged", (accounts) => {
+  window.ethereum.on("accountsChanged", (accounts : string[]) => {
     console.log("account changed ", accounts);
     // loadBlockchainData();
     resetState();
   });
 
-  window.ethereum.on("chainChanged", (networkId) => {
+  window.ethereum.on("chainChanged", (networkId: string) => {
     console.log(" networkId ", networkId);
     // loadBlockchainData();
     resetState();
   });
 
-  const createTask = (content) => {
+  const createTask = (content : string) => {
     setLoading(true);
     todoListContract.methods
       .createTask(content)
       .send({ from: account })
-      .once("receipt", async (receipt) => {
+      .once("receipt", async (receipt: TransactionReceipt ) => {
         console.log(" receipt ", receipt);
         setLoading(false);
-        const createResult = receipt.events.TaskCreated.returnValues;
+        const createResult  = receipt.events?.TaskCreated.returnValues;
         const newTask = await todoListContract.methods
           .getTask(createResult.id)
           .call({ from: account });
         setTasks([...tasks, newTask]);
       })
-      .once("error", (error) => {
+      .once("error", (error: Error) => {
         console.log("Error ocure", error);
         setLoading(false);
       });
   };
 
-  const editTask = (id, content) => {
+  const editTask = (id: string, content: string) => {
     setLoading(true);
-    todoListContract.methods
+    todoListContract
+    
+    .methods
       .editTask(id, content)
       .send({ from: account })
-      .once("receipt", async (receipt) => {
+      .once("receipt", async (receipt: TransactionReceipt) => {
         console.log(" receipt ", receipt);
-
         const foundIndex = tasks.findIndex((task) => task.id === id);
         console.log("foundIndex : ", foundIndex);
         console.log("tasks[foundIndex] : ", tasks[foundIndex]);
         console.log("type : ", typeof tasks[foundIndex]);
         tasks[foundIndex] = { ...tasks[foundIndex], content };
-        // tasks[foundIndex].content = content;
         setTasks(tasks);
         setLoading(false);
       })
-      .once("error", (error) => {
+      .once("error", (error: Error) => {
         console.log("Error ocure", error);
         setLoading(false);
       });
   };
-  const toggleTaskComplete = (id) => {
+
+  const toggleTaskComplete = (id: string) => {
     setLoading(true);
     todoListContract.methods
       .toggleTaskComplete(id)
       .send({ from: account })
-      .once("receipt", (receipt) => {
+      .once("receipt", (receipt:TransactionReceipt) => {
         console.log(" receipt ", receipt);
         const foundIndex = tasks.findIndex((task) => task.id === id);
-        tasks[foundIndex].completed = receipt.events.TaskCompleted.completed;
+        tasks[foundIndex].completed = receipt.events?.TaskCompleted.returnValues.id;
         setTasks(tasks);
         setLoading(false);
       })
-      .once("error", (error) => {
+      .once("error", (error: { code: number; message: string; stack: string; }) => {
         console.log("Error ocure", error);
         setLoading(false);
         alert(
           `error code: ${error.code} \nMessage: ${error.message} \n\nStack: ${error.stack}`
         );
       })
-      .then(() => {
-        alert("5555");
-      });
+      
   };
 
   const loadBlockchainData = async () => {
@@ -118,7 +129,7 @@ const App = () => {
       .getTaskCount()
       .call({ from: account });
 
-    let allTask = [];
+    let allTask: Task[] = [];
     let previousTaskId = 0;
 
     for (let i = 0; i < taskCount; i++) {
@@ -139,18 +150,18 @@ const App = () => {
     setIsConnecting(false);
   };
 
-  const deleteTask = (id) => {
+  const deleteTask = (id: string) => {
     setLoading(true);
     todoListContract.methods
       .deleteTask(id)
       .send({ from: account })
-      .once("receipt", async (receipt) => {
+      .once("receipt", async (receipt : TransactionReceipt) => {
         console.log(" receipt ", receipt);
         setLoading(false);
-        const createResult = receipt.events.TaskDeleted.returnValues;
+        const createResult = receipt.events?.TaskDeleted.returnValues;
         setTasks(tasks.filter((task) => task.id !== createResult.id));
       })
-      .once("error", (error) => {
+      .once("error", (error: any) => {
         console.log("Error ocure", error);
         setLoading(false);
       });
@@ -175,7 +186,7 @@ const App = () => {
         <p>Contract Address: {contractAddress}</p>
         <p>Task Count: {taskCount}</p>
         <form
-          onSubmit={(event) => {
+          onSubmit={(event :any) => {
             event.preventDefault();
             console.log("Event", event.target[0].value);
             createTask(event.target[0].value);
