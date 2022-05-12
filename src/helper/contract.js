@@ -31,5 +31,5 @@ export const initTodolistContract = async () => {
   const accounts = await web3.eth.getAccounts();
   const contractAddress = getContractAddress(network);
   const todoList = new web3.eth.Contract(todoListAbi, contractAddress);
-  return { todoList, network, account: accounts[0] };
+  return { todoList, network, account: accounts[0], contractAddress };
 };

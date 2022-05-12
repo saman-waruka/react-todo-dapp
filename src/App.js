@@ -5,6 +5,7 @@ import "./App.css";
 const App = () => {
   const [account, setAccount] = useState("");
   const [network, setNetwork] = useState("");
+  const [contractAddress, setContractAddress] = useState("");
   const [tasks, setTasks] = useState([]);
   const [taskCount, setTaskCount] = useState(0);
   const [todoListContract, setTodoListContract] = useState();
@@ -67,15 +68,26 @@ const App = () => {
 
   const loadBlockchainData = async () => {
     console.log("loadBlockchainData  ");
-    const { network, account, todoList } = await initTodolistContract();
+    const { network, account, todoList, contractAddress } =
+      await initTodolistContract();
     const taskCount = await todoList.methods.getTaskCount().call();
     const allTask = await todoList.methods.getTasks().call();
-    console.log("taskCount ", taskCount);
+    console.log("taskCount ", { taskCount });
     console.log("allTask ", allTask);
     console.log("todoList ", todoList);
-    const task0 = await todoList.methods.tasks(account, 0).call();
-    console.log("task0 ", task0);
+    try {
+      const taskCount2 = await todoList.methods.totalTask(account).call();
+      console.log("taskCount2 ", taskCount2);
 
+      for (let i = 0; i < taskCount2; i++) {
+        const task = await todoList.methods.tasks(account, i).call();
+        console.log(`task ${i} : `, task);
+      }
+    } catch (err) {
+      console.log("err", err);
+    }
+
+    setContractAddress(contractAddress);
     setNetwork(network);
     setAccount(account);
     setTodoListContract(todoList);
@@ -87,6 +99,7 @@ const App = () => {
       <div className="App-header">
         <p>Your network: {network}</p>
         <p>Your account: {account}</p>
+        <p>Contract Address: {contractAddress}</p>
         <p>Task Count: {taskCount}</p>
         <form
           onSubmit={(event) => {
