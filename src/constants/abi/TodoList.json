@@ -1,22 +1,8 @@
 [
   {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "completed",
-        "type": "bool"
-      }
-    ],
-    "name": "TaskCompleted",
-    "type": "event"
+    "inputs": [],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
   },
   {
     "anonymous": false,
@@ -32,15 +18,22 @@
         "internalType": "string",
         "name": "content",
         "type": "string"
-      },
-      {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "completed",
-        "type": "bool"
       }
     ],
     "name": "TaskCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      }
+    ],
+    "name": "TaskDeleted",
     "type": "event"
   },
   {
@@ -69,6 +62,25 @@
     "type": "event"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "completed",
+        "type": "bool"
+      }
+    ],
+    "name": "ToggleTaskCompleted",
+    "type": "event"
+  },
+  {
     "inputs": [
       {
         "internalType": "string",
@@ -77,6 +89,19 @@
       }
     ],
     "name": "createTask",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_id",
+        "type": "uint256"
+      }
+    ],
+    "name": "deleteTask",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -100,21 +125,14 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "getTaskCount",
-    "outputs": [
+    "inputs": [
       {
         "internalType": "uint256",
-        "name": "total",
+        "name": "_id",
         "type": "uint256"
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getTasks",
+    "name": "getNextTask",
     "outputs": [
       {
         "components": [
@@ -134,9 +152,9 @@
             "type": "bool"
           }
         ],
-        "internalType": "struct TodoList.Task[]",
+        "internalType": "struct TodoList.Task",
         "name": "",
-        "type": "tuple[]"
+        "type": "tuple"
       }
     ],
     "stateMutability": "view",
@@ -145,32 +163,47 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      },
-      {
         "internalType": "uint256",
-        "name": "",
+        "name": "_id",
         "type": "uint256"
       }
     ],
-    "name": "tasks",
+    "name": "getTask",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "id",
+            "type": "uint256"
+          },
+          {
+            "internalType": "string",
+            "name": "content",
+            "type": "string"
+          },
+          {
+            "internalType": "bool",
+            "name": "completed",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct TodoList.Task",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getTaskCount",
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "id",
+        "name": "",
         "type": "uint256"
-      },
-      {
-        "internalType": "string",
-        "name": "content",
-        "type": "string"
-      },
-      {
-        "internalType": "bool",
-        "name": "completed",
-        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -187,25 +220,6 @@
     "name": "toggleTaskComplete",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "totalTask",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   }
 ]

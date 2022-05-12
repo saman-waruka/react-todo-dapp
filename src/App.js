@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { initTodolistContract } from "./helper/contract";
 import "./App.css";
+import TodoItem from "./components/TodoItem";
 
 const App = () => {
   const [account, setAccount] = useState("");
@@ -10,20 +11,36 @@ const App = () => {
   const [taskCount, setTaskCount] = useState(0);
   const [todoListContract, setTodoListContract] = useState();
   const [loading, setLoading] = useState(false);
+  const [isConnectedWallet, setIsConnectedWallet] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
 
   console.log(" tasks ", tasks);
-  useEffect(() => {
-    loadBlockchainData();
-  }, []);
+  // useEffect(() => {
+  //   loadBlockchainData();
+  // }, []);
+
+  const resetState = () => {
+    setAccount("");
+    setNetwork("");
+    setContractAddress("");
+    setTasks([]);
+    setTaskCount(0);
+    setTodoListContract();
+    setLoading(false);
+    setIsConnectedWallet(false);
+    setIsConnecting(false);
+  };
 
   window.ethereum.on("accountsChanged", (accounts) => {
     console.log("account changed ", accounts);
-    loadBlockchainData();
+    // loadBlockchainData();
+    resetState();
   });
 
   window.ethereum.on("chainChanged", (networkId) => {
     console.log(" networkId ", networkId);
-    loadBlockchainData();
+    // loadBlockchainData();
+    resetState();
   });
 
   const createTask = (content) => {
@@ -31,12 +48,14 @@ const App = () => {
     todoListContract.methods
       .createTask(content)
       .send({ from: account })
-      .once("receipt", (receipt) => {
+      .once("receipt", async (receipt) => {
         console.log(" receipt ", receipt);
         setLoading(false);
-        const newTask = receipt.events.TaskCreated.returnValues;
+        const createResult = receipt.events.TaskCreated.returnValues;
+        const newTask = await todoListContract.methods
+          .getTask(createResult.id)
+          .call({ from: account });
         setTasks([...tasks, newTask]);
-        setTaskCount(Number(taskCount) + 1);
       })
       .once("error", (error) => {
         console.log("Error ocure", error);
@@ -44,6 +63,28 @@ const App = () => {
       });
   };
 
+  const editTask = (id, content) => {
+    setLoading(true);
+    todoListContract.methods
+      .editTask(id, content)
+      .send({ from: account })
+      .once("receipt", async (receipt) => {
+        console.log(" receipt ", receipt);
+
+        const foundIndex = tasks.findIndex((task) => task.id === id);
+        console.log("foundIndex : ", foundIndex);
+        console.log("tasks[foundIndex] : ", tasks[foundIndex]);
+        console.log("type : ", typeof tasks[foundIndex]);
+        tasks[foundIndex] = { ...tasks[foundIndex], content };
+        // tasks[foundIndex].content = content;
+        setTasks(tasks);
+        setLoading(false);
+      })
+      .once("error", (error) => {
+        console.log("Error ocure", error);
+        setLoading(false);
+      });
+  };
   const toggleTaskComplete = (id) => {
     setLoading(true);
     todoListContract.methods
@@ -59,21 +100,34 @@ const App = () => {
       .once("error", (error) => {
         console.log("Error ocure", error);
         setLoading(false);
-
         alert(
           `error code: ${error.code} \nMessage: ${error.message} \n\nStack: ${error.stack}`
         );
+      })
+      .then(() => {
+        alert("5555");
       });
   };
 
   const loadBlockchainData = async () => {
+    setIsConnecting(true);
     console.log("loadBlockchainData  ");
     const { network, account, todoList, contractAddress } =
       await initTodolistContract();
     const taskCount = await todoList.methods
       .getTaskCount()
       .call({ from: account });
-    const allTask = await todoList.methods.getTasks().call({ from: account });
+
+    let allTask = [];
+    let previousTaskId = 0;
+
+    for (let i = 0; i < taskCount; i++) {
+      const task = await todoList.methods
+        .getNextTask(previousTaskId)
+        .call({ from: account });
+      allTask.push(task);
+      previousTaskId = task.id;
+    }
 
     setContractAddress(contractAddress);
     setNetwork(network);
@@ -81,10 +135,41 @@ const App = () => {
     setTodoListContract(todoList);
     setTaskCount(taskCount);
     setTasks(allTask);
+    setIsConnectedWallet(true);
+    setIsConnecting(false);
+  };
+
+  const deleteTask = (id) => {
+    setLoading(true);
+    todoListContract.methods
+      .deleteTask(id)
+      .send({ from: account })
+      .once("receipt", async (receipt) => {
+        console.log(" receipt ", receipt);
+        setLoading(false);
+        const createResult = receipt.events.TaskDeleted.returnValues;
+        setTasks(tasks.filter((task) => task.id !== createResult.id));
+      })
+      .once("error", (error) => {
+        console.log("Error ocure", error);
+        setLoading(false);
+      });
   };
   return (
     <div className="App">
       <div className="App-header">
+        {!isConnectedWallet && (
+          <button
+            onClick={() => {
+              loadBlockchainData();
+            }}
+          >
+            Connect Wallet
+          </button>
+        )}
+
+        {isConnecting && <div>Connecting Wallet ...</div>}
+
         <p>Your network: {network}</p>
         <p>Your account: {account}</p>
         <p>Contract Address: {contractAddress}</p>
@@ -96,26 +181,25 @@ const App = () => {
             createTask(event.target[0].value);
           }}
         >
-          <input type="text" placeholder="Add task..." required />
-          <input type="submit" value="Submit" />
+          <input
+            type="text"
+            placeholder="Add task..."
+            required
+            disabled={!isConnectedWallet}
+          />
+          <input type="submit" value="Submit" disabled={!isConnectedWallet} />
         </form>
         {loading && <div>Loading...</div>}
-        {tasks.map((task, key) => {
+        {tasks.map((task, id) => {
           return (
-            <div key={key}>
-              <label>
-                <input
-                  type="checkbox"
-                  name={task.id}
-                  onClick={() => {
-                    toggleTaskComplete(task.id);
-                  }}
-                  defaultChecked={task.completed}
-                />
-                <span>{key + 1} .) </span>
-                <span>{task.content}</span>
-              </label>
-            </div>
+            <TodoItem
+              key={id}
+              id={id}
+              task={task}
+              toggleTaskComplete={toggleTaskComplete}
+              deleteTask={deleteTask}
+              editTask={editTask}
+            />
           );
         })}
       </div>
