@@ -1,6 +1,21 @@
-import React, { useState } from "react";
+import { Task } from "../../App";
+import { useState } from "react";
 
-const TodoItem = ({ id, task, toggleTaskComplete, deleteTask, editTask }) => {
+interface TodoItemArgs {
+  id: number;
+  task: Task;
+  toggleTaskComplete: (id: string) => void;
+  deleteTask: (id: string) => void;
+  editTask: (id: string, content: string) => void;
+}
+
+const TodoItem = ({
+  id,
+  task,
+  toggleTaskComplete,
+  deleteTask,
+  editTask,
+}: TodoItemArgs) => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [content, setContent] = useState(task.content);
   return (
