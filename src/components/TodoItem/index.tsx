@@ -1,5 +1,6 @@
 import { Task } from "../../App";
 import { useState } from "react";
+import { getOriginalId } from "../../helper/graphql";
 
 interface TodoItemArgs {
   id: number;
@@ -18,6 +19,7 @@ const TodoItem = ({
 }: TodoItemArgs) => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [content, setContent] = useState(task.content);
+  const originalTaskId =   getOriginalId(task.id)
   return (
     <div>
       <label>
@@ -25,7 +27,7 @@ const TodoItem = ({
           type="checkbox"
           name={task.id}
           onClick={() => {
-            toggleTaskComplete(task.id);
+            toggleTaskComplete(originalTaskId);
           }}
           defaultChecked={task.completed}
         />
@@ -46,7 +48,7 @@ const TodoItem = ({
           <button
             onClick={() => {
               setIsEditMode(false);
-              editTask(task.id, content);
+              editTask(originalTaskId, content);
             }}
             disabled={content === task.content}
           >
@@ -58,7 +60,7 @@ const TodoItem = ({
 
         <button
           onClick={() => {
-            deleteTask(task.id);
+            deleteTask(originalTaskId);
           }}
         >
           Delete
